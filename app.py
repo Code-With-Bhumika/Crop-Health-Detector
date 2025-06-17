@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go # type: ignore
 from utils import detect_symptoms_and_severity
 from pdf_report import create_pdf_report
 
@@ -64,45 +64,39 @@ st.set_page_config(
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap');
-
     html, body, [class*="css"] {
         font-family: 'Lexend', sans-serif;
+        font-size: 18px !important;
     }
-
     body {
         background-image: url("https://img.freepik.com/free-vector/green-agriculture-background-flat-design_23-2149423044.jpg");
         background-size: cover;
         background-attachment: fixed;
     }
-
     .title-gradient {
         background: linear-gradient(90deg, #00b09b, #96c93d);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 52px;
+        font-size: 60px;
         font-weight: 800;
         text-align: center;
-        margin-bottom: 0px;
     }
-
     .subtitle {
         text-align: center;
-        font-size: 18px;
-        color: #444;
+        font-size: 22px;
+        color: #2c2c2c;
         margin-bottom: 30px;
     }
-
     .stButton>button {
         background: linear-gradient(to right, #56ab2f, #a8e063);
         border: none;
         color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 6px;
-        font-size: 16px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 18px;
         font-weight: 600;
         cursor: pointer;
     }
-
     .stButton>button:hover {
         background: linear-gradient(to right, #a8e063, #56ab2f);
     }
@@ -116,22 +110,34 @@ st.markdown('<div class="subtitle">AI-powered leaf disease detection and advisor
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2909/2909642.png", width=110)
 
 menu = st.sidebar.radio("Navigate", ["📁 Image Upload", "📄 PDF Report", "🌐 3D Visualization"])
-st.sidebar.markdown("## 🌾 About")
-st.sidebar.info("""
-- Detects Yellowing, Holes, Fungal Spots, Dried Edges  
-- Classifies Severity  
-- Generates Reports  
-- 3D Disease Visualization
-""")
+
+st.sidebar.markdown("## 🌿 About the Project")
+st.sidebar.markdown("""
+<b>Crop Health Detector</b> is an AI-powered application designed to detect and classify diseases in crop leaves.
+
+**Key Features:**
+- 🔍 Detects symptoms like Yellowing, Holes, Fungal Spots, and Dried Edges.
+- 📈 Classifies severity as Healthy, Low, Moderate, or Severe.
+- 📄 Generates downloadable health reports in PDF format.
+- 🌐 Offers interactive 3D visualization of disease-affected areas.
+
+**Technologies Used:** OpenCV, Streamlit, Plotly, Machine Learning
+""", unsafe_allow_html=True)
 
 st.sidebar.markdown("## 👩‍💻 Developer")
-st.sidebar.markdown("**Bhumika**\n📧 bhumikasindhakhed12@gmail.com")
+st.sidebar.markdown("**Bhumika**  \n📧 bhumikasindhakhed12@gmail.com")
 
 # --- App Logic ---
-results = {}
-uploaded_file_refs = {}
+if "results" not in st.session_state:
+    st.session_state.results = {}
+if "uploaded_file_refs" not in st.session_state:
+    st.session_state.uploaded_file_refs = {}
+
+results = st.session_state.results
+uploaded_file_refs = st.session_state.uploaded_file_refs
 
 if menu == "📁 Image Upload":
+    st.markdown("### 📁 Upload & Analyze Leaf Images")
     uploaded_files = st.file_uploader("Upload leaf images (JPG/PNG)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
     if uploaded_files:
         for uploaded_file in uploaded_files:
@@ -149,12 +155,15 @@ if menu == "📁 Image Upload":
             uploaded_file_refs[uploaded_file.name] = mask
 
             st.image(img[:, :, ::-1], caption=f"Analyzed: {uploaded_file.name}", use_container_width=True)
+
             st.markdown(f"""
-                <h4 style='color:#2E7D32;'>🩺 <b>Severity: {severity}</b></h4>
-                <h5 style='color:#F57C00;'>📊 Percentage: {percent:.2f}%</h5>
-                <h5 style='color:#6A1B9A;'>🔬 Symptoms: {', '.join(symptoms) or "None"}</h5>
-                <p><b>🛡️ General Advice:</b> {precautions}</p>
-                <p><b>📘 Symptom-specific Tips:</b><br>{tips}</p>
+            <div style='padding:10px; background-color:#f0f9ff; border-left:5px solid #2E7D32'>
+            <b>🩺 Severity:</b> <span style='color:#2E7D32; font-size:20px;'>{severity}</span><br>
+            <b>📊 Disease Coverage:</b> <span style='color:#F57C00;'>{percent:.2f}%</span><br>
+            <b>🔬 Symptoms:</b> <span style='color:#6A1B9A;'>{', '.join(symptoms) or "None"}</span><br><br>
+            <b>🛡️ General Advice:</b><br>{precautions}<br><br>
+            <b>📘 Symptom-specific Tips:</b><br>{tips}
+            </div>
             """, unsafe_allow_html=True)
 
             st.progress(min(int(percent), 100))
@@ -163,7 +172,7 @@ if menu == "📁 Image Upload":
         st.warning("Please upload at least one image to begin analysis.")
 
 elif menu == "📄 PDF Report":
-    st.subheader("📄 Generate PDF Health Report")
+    st.markdown("### 📄 Generate PDF Health Report")
     if results:
         if st.button("Generate PDF Report", key="pdf_button"):
             pdf_path = create_pdf_report(results)
@@ -174,7 +183,7 @@ elif menu == "📄 PDF Report":
         st.info("No results to report. Upload and analyze images first.")
 
 elif menu == "🌐 3D Visualization":
-    st.subheader("3D Visualization of Leaf Damage")
+    st.markdown("### 🌐 Interactive 3D Disease Visualization")
     if uploaded_file_refs:
         selected_img = st.selectbox("Select Image", list(uploaded_file_refs.keys()))
         fig = create_3d_surface_from_mask(uploaded_file_refs[selected_img])
@@ -185,7 +194,8 @@ elif menu == "🌐 3D Visualization":
 # --- Footer ---
 st.markdown("""
 ---
-<p style='text-align:center; color:gray; font-size:14px'>
-🌿 Built with ❤️ by <b>Bhumika</b> | Powered by OpenCV + Streamlit + Plotly
+<p style='text-align:center; font-size:16px; color:#666'>
+🌱 <b>Project by Bhumika</b><br>
+📧 bhumikasindhakhed12@gmail.com | 🚀 Streamlit • OpenCV • Plotly
 </p>
 """, unsafe_allow_html=True)
